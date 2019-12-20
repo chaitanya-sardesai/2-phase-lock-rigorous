@@ -1,0 +1,141 @@
+main():
+
+	fptr <- open file
+	lines <- fptr.readlines().split('\n') #get the file data into the list name lines
+	close file
+	timeStamp = 0
+	line <- readline from lines[]
+	while line != END_OF_LINE:
+		recheckFlag = Flase
+		if 'b': #transaction is begin
+			transactionId <- extract transaction id
+			timeStamp += 1
+			begin(transactionId, timeStamp)
+			delete entry from lines[]
+			recheckFlag = Flase
+		elif 'r': #read transaction operation
+			transactionId <- extract transaction id
+			dataItem <- extract data item from line
+			success <- read(transactionId, dataItem, recheckFlag)
+			if success == 0:
+				lines <- assign start index 0 #transaction transactionId got aborted, check if we can execute any other blocked trasaction previously was in blocked state
+				recheckFlag = True
+			elif success == 1:
+				delete entry from lines[]
+				recheckFlag = Flase
+		elif 'w': #write trasanction operation
+			transactionId <- extract transaction id
+			dataItem <- extract data item from line
+			success <- write(transactionId, dataItem)
+			if success == 0:
+				lines <- assign start index 0 #transaction transactionId got aborted, check if we can execute any other blocked trasaction previously was in blocked state
+				recheckFlag = True
+			elif success == 1:
+				delete entry from lines[]
+				recheckFlag = Flase
+		elif 'e':
+			transactionId <- extract transaction id
+			commit(transactionId)
+			lines <- assign start index 0 #transaction transactionId got committed, check if we can execute any other blocked trasaction previously was in blocked state
+			recheckFlag = True
+commit(transactionId):
+	rowNum <- search transactionId in dfTrasactnTable
+	dfTrasactnTable[rowNum].state <- "committed" #overwrite "committed" string over "active" in status column in Transaction Table
+	for row in dfLockTable:
+		if row.lockingTrasaction == transactionId: #if item locked by trasaction "transactionId" release it
+			delete row #remove entry from Lock Table
+			
+abort(transactionId):
+	rowNum <- search transactionId in dfTrasactnTable
+	dfTrasactnTable[rowNum].state <- "committed" #overwrite "abort" string over "active" in status column in Transaction Table
+	for row in dfLockTable:
+		if row.lockingTrasaction == transactionId: #if item locked by trasaction "transactionId" release it
+			delete row #remove entry from Lock Table
+
+begin(transactionId, timeStamp):
+	#add new entry in Transaction table
+	new_row = [transactionId, timeStamp, "active", None]
+	dfTrasactnTable.append(new_row)
+	
+read(Tid,data_item, recheckFlag):
+	if Tid in transaction_table:
+		if transaction_status == "blocked" and !recheckFlag				#keep waiting
+			return 2
+		else:
+			if data_item in lock_table:
+				if lock_status == "wl"					#wl exist so we check time stamp
+					j <- get TS from transaction_table of transaction who has the lock  #acquire time stamp
+					if TS_requestingLock(Tid)>TS_holdingLock(j)
+						abort(Tid)
+						return 0
+					else:
+						wait(Tid,data_item)
+						return 2
+				else:									#rl already exists in lock table so we add one more entry in rl with transaction id Tid 
+					#acquire rl
+					rowNum <- data_item in dfLockTable 		# get row of the lock table of data item
+					rowNum.lockingTransaction <- Tid 			# add one more entry of transaction Tid in column "locking transaction list", update entry in lock_table 
+					#update entry in transaction_table
+					rowNum <- Tid in dfTransactnTable 		# get row of the transaction table of transaction id Tid
+					rowNum.itemsLocked <- (rl, data_item)	# add one more entry of lock rl and data item tuple in column "items locked", update entry in transaction tbale 
+					return 1
+			else:											#no entry for the data_item exist
+				#add new entry in lock_table
+				new_row = [data_item, 'rl', Tid, None]
+				dfLockTable.append(new_row) 
+				#update entry in transaction_table
+				rowNum <- Tid in dfTransactnTable 		# get row of the transaction table of transaction id Tid
+				rowNum.itemsLocked <- (rl, data_item)	# add one more entry of lock rl and data item tuple in column "items locked", update entry in transaction tbale 
+				return 1
+	else
+		return 3
+		
+write(Tid,data_item, recheckFlag):
+	if Tid in transaction_table:
+		if transaction_status == "blocked" and !recheckFlag			#keep waiting
+			return 2
+		else:
+			if data_item in lock_table:
+				if lock_status == "rl" or lock_status == "wl":			
+					allTids[] <- get TS of all transaction ids from transaction_table having wl or rl
+					for curTid in allTids:
+						if TS_requestingLock(Tid)>TS_holdingLock(curTid):
+							abort(Tid)
+							return 0
+					wait(Tid,data_item)
+					return 2
+			else:										#if no data_item exist, simply assign the lock
+				#add new entry in lock_table
+				new_row = [data_item, 'wl', Tid, None]
+				dfLockTable.append(new_row) 
+				#update entry in transaction_table
+				rowNum <- Tid in dfTransactnTable 		# get row of the transaction table of transaction id Tid
+				rowNum.itemsLocked <- (wl, data_item)	# add one more entry of lock rl and data item tuple in column "items locked", update entry in transaction tbale 
+				return 1
+	else:
+		return 3
+		
+wait(Tid,data_item):
+	status <- update transaction status of Tid as "blocked" in transaction_table
+	waiting_on <- update waiting_on with data_item in transaction_table
+	rowNum <- getrow num matching with data_item from lock_table
+	rowNum.TransactionWaiting <- update/append Tid in lock_table
+
+	
+	
+====================================================
+Data structure for Transaction table and Lock table
+====================================================
+	Transaction table columns:
+		 ___________________________________________________
+		| Tid | TimeStamp | State | ItemsLocked | WaitingOn |
+		|_____|___________|_______|_____________|___________|
+			
+		Pandas data frame will be used to store this table with column names stated above
+	
+	Lock table columns:
+		 __________________________________________________________________
+		| ItemName | LockStatus | LockingTransaction | TransactionsWaiting |
+		|__________|____________|____________________|_____________________|
+			
+		Pandas data frame will be used to store this table with column names stated above
