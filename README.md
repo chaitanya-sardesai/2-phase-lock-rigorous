@@ -1,11 +1,5 @@
 -----------------------
-Pallabee Mahanta
-Student ID: 1001551985
------------------------
-
------------------------
 Chaiatanya Sardesai
-Student ID: 1001536420
 -----------------------
 
 ----------------------
@@ -24,7 +18,7 @@ Package Structure :
 	src folder has 2 python files
 	RPL_2.py file, which is main file of project
 	constants.py file, which is header/constant definitions file of project 
-	Path:: ..\src\RPL_2.py
+	Path:: ..\src\rigorous_2pl.py
 Note: input*.txt file shall be present at the location same as of *.py file of the project. (Above Path)
 
 ---------------
