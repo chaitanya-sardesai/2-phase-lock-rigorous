@@ -1,0 +1,330 @@
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+b1
+
+Begin T1
+
+  Tid TimeStamp   State ItemsLocked WaitingOn
+0   1         1  active          []      None
+Empty DataFrame
+Columns: [Items, LockState, LockingTransaction, TransactionsWaiting]
+Index: []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+r1 (Y)
+
+Read lock acquired by T1 on Y
+
+  Tid TimeStamp   State ItemsLocked WaitingOn
+0   1         1  active   [[Y, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        rl                [1]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+w1 (Y)
+
+Write lock acquired by T1 on Y
+
+  Tid TimeStamp   State ItemsLocked WaitingOn
+0   1         1  active   [[Y, wl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+r1 (Z)
+
+Read lock acquired by T1 on Z
+
+  Tid TimeStamp   State         ItemsLocked WaitingOn
+0   1         1  active  [[Y, wl], [Z, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        rl                [1]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+b2
+
+Begin T2
+
+  Tid TimeStamp   State         ItemsLocked WaitingOn
+0   1         1  active  [[Y, wl], [Z, rl]]      None
+1   2         2  active                  []      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        rl                [1]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+r2 (X)
+
+Read lock acquired by T2 on X
+
+  Tid TimeStamp   State         ItemsLocked WaitingOn
+0   1         1  active  [[Y, wl], [Z, rl]]      None
+1   2         2  active           [[X, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        rl                [1]                  []
+2     X        rl                [2]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+w2 (X)
+
+Write lock acquired by T2 on X
+
+  Tid TimeStamp   State         ItemsLocked WaitingOn
+0   1         1  active  [[Y, wl], [Z, rl]]      None
+1   2         2  active           [[X, wl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        rl                [1]                  []
+2     X        wl                [2]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+w1 (Z)
+
+Write lock acquired by T1 on Z
+
+  Tid TimeStamp   State         ItemsLocked WaitingOn
+0   1         1  active  [[Y, wl], [Z, wl]]      None
+1   2         2  active           [[X, wl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        wl                [1]                  []
+2     X        wl                [2]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+r2 (Y)
+
+-------------------------------------------------------------------
+Abort Transaction 2
+Ignore as T2 was aborted
+
+  Tid TimeStamp    State         ItemsLocked WaitingOn
+0   1         1   active  [[Y, wl], [Z, wl]]      None
+1   2         2  aborted                  []      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        wl                [1]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+b3
+
+Begin T3
+
+  Tid TimeStamp    State         ItemsLocked WaitingOn
+0   1         1   active  [[Y, wl], [Z, wl]]      None
+1   2         2  aborted                  []      None
+2   3         3   active                  []      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        wl                [1]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+r3 (Z)
+
+-------------------------------------------------------------------
+Abort Transaction 3
+Ignore as T3 was aborted
+
+  Tid TimeStamp    State         ItemsLocked WaitingOn
+0   1         1   active  [[Y, wl], [Z, wl]]      None
+1   2         2  aborted                  []      None
+2   3         3  aborted                  []      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        wl                [1]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+b4
+
+Begin T4
+
+  Tid TimeStamp    State         ItemsLocked WaitingOn
+0   1         1   active  [[Y, wl], [Z, wl]]      None
+1   2         2  aborted                  []      None
+2   3         3  aborted                  []      None
+3   4         4   active                  []      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        wl                [1]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+r4(X)
+
+Read lock acquired by T4 on X
+
+  Tid TimeStamp    State         ItemsLocked WaitingOn
+0   1         1   active  [[Y, wl], [Z, wl]]      None
+1   2         2  aborted                  []      None
+2   3         3  aborted                  []      None
+3   4         4   active           [[X, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+0     Y        wl                [1]                  []
+1     Z        wl                [1]                  []
+2     X        rl                [4]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+e1
+
+T1 Committed
+
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4     active   [[X, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+2     X        rl                [4]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+w3 (Z)
+
+-------------------------------------------------------------------
+Ignore Aborted Transaction 3
+T3 was Aborted
+
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4     active   [[X, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+2     X        rl                [4]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+w2 (Y)
+
+-------------------------------------------------------------------
+Ignore Aborted Transaction 2
+T2 was Aborted
+
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4     active   [[X, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+2     X        rl                [4]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+e2
+
+-------------------------------------------------------------------
+Ignore Aborted Transaction 2
+T2 was Aborted
+
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4     active   [[X, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+2     X        rl                [4]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+r3 (X)
+
+-------------------------------------------------------------------
+Ignore Aborted Transaction 3
+T3 was Aborted
+
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4     active   [[X, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+2     X        rl                [4]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+w3 (X)
+
+-------------------------------------------------------------------
+Ignore Aborted Transaction 3
+T3 was Aborted
+
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4     active   [[X, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+2     X        rl                [4]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+e3
+
+-------------------------------------------------------------------
+Ignore Aborted Transaction 3
+T3 was Aborted
+
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4     active   [[X, rl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+2     X        rl                [4]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+w4(X)
+
+Write lock acquired by T4 on X
+
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4     active   [[X, wl]]      None
+  Items LockState LockingTransaction TransactionsWaiting
+2     X        wl                [4]                  []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+e4
+
+T4 Committed
+
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4  committed          []      None
+Empty DataFrame
+Columns: [Items, LockState, LockingTransaction, TransactionsWaiting]
+Index: []
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+-------------------------------------------------------------------
+  Tid TimeStamp      State ItemsLocked WaitingOn
+0   1         1  committed          []      None
+1   2         2    aborted          []      None
+2   3         3    aborted          []      None
+3   4         4  committed          []      None
+-------------------------------------------------------------------
+Empty DataFrame
+Columns: [Items, LockState, LockingTransaction, TransactionsWaiting]
+Index: []
+-------------------------------------------------------------------
